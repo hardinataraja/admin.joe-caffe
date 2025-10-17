@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Joe Caffe Admin Dashboard</title>
+<style>
+  * {box-sizing: border-box; transition: all 0.3s ease;}
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(to bottom right, #f7e6c3, #f5d7b0);
+    margin: 0;
+  }
+  header {
+    background: #b1742a;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    background: #f0e0c5;
+    padding: 10px;
+  }
+  nav button {
+    background: #b1742a;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  nav button:hover {transform: scale(1.05);}
+
+  section {
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(10px);
+    display: none;
+  }
+  section.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  h2, h3 {
+    color: #4a2d0a;
+    margin-bottom: 15px;
+  }
+
+  input, select {
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    border: 1px solid #b1742a55;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: #b1742a;
+    box-shadow: 0 0 5px rgba(177,116,42,0.5);
+  }
+
+  button.action {
+    background: #b1742a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  button.action:hover {background: #8e5a1f;}
+
+  .card {
+    background: #fffaf3;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    background: #fffdf8;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  .menu-item img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-right: 12px;
+  }
+  .menu-item div {flex: 1;}
+  .menu-item .buttons button {
+    margin-right: 5px;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #fff;
+    font-weight: 600;
+  }
+  .menu-item .edit {background: #b1742a;}
+  .menu-item .delete {background: #c0392b;}
+  .menu-item .edit:hover {background: #94601f;}
+  .menu-item .delete:hover {background: #962d22;}
+
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+<header>☕ Joe Caffe Admin Dashboard</header>
+
+<nav>
+  <button onclick="showTab('orders')">📦 Pesanan Masuk</button>
+  <button onclick="showTab('menu')">🍽️ Manajemen Menu</button>
+  <button onclick="showTab('report')">📊 Laporan Penjualan</button>
+</nav>
+
+<!-- TAB PESANAN -->
+<section id="ordersTab" class="active">
+  <h2>📦 Pesanan Masuk</h2>
+  <div id="ordersList"></div>
+</section>
+
+<!-- TAB MENU -->
+<section id="menuTab">
+  <h2>🍽️ Tambah Produk Baru</h2>
+  <div class="card">
+    <input id="nama" placeholder="Nama Produk">
+    <input id="harga" type="number" placeholder="Harga (Rp)">
+    <select id="kategori">
+      <option value="Makanan">🍛 Makanan</option>
+      <option value="Minuman">🥤 Minuman</option>
+    </select>
+    <input id="gambar" placeholder="URL Gambar Produk">
+    <button class="action" onclick="tambahMenu()">+ Tambah Produk</button>
+  </div>
+
+  <h2>📋 Daftar Menu</h2>
+  <div id="menuList"></div>
+</section>
+
+<!-- TAB LAPORAN -->
+<section id="reportTab">
+  <h2>📊 Laporan Penjualan</h2>
+  <div class="card">
+    <h3>📅 Filter Tanggal</h3>
+    <label>Dari:</label>
+    <input type="date" id="startDate">
+    <label>Sampai:</label>
+    <input type="date" id="endDate">
+    <button class="action" onclick="filterLaporan()">Terapkan Filter</button>
+  </div>
+
+  <div class="card" id="reportList">Memuat data...</div>
+
+  <div class="card">
+    <h3>🍰 Produk Paling Laris</h3>
+    <div id="bestSellerList">Belum ada data.</div>
+  </div>
+
+  <div class="card">
+    <h3>💰 Rekap Pendapatan Harian / Bulanan</h3>
+    <div id="rekapList">Belum ada data.</div>
+  </div>
+</section>
+
+<!-- MODAL UBAH STATUS -->
+<div class="modal" id="statusModal">
+  <div class="modal-content">
+    <h3>Ubah Status Pesanan</h3>
+    <select id="statusSelect">
+      <option value="menunggu">Menunggu</option>
+      <option value="diproses">Diproses</option>
+      <option value="selesai">Siap diantar / Selesai</option>
+    </select>
+    <br><br>
+    <button class="action" onclick="simpanStatus()">Simpan</button>
+    <button onclick="tutupStatusModal()">Batal</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// === FIREBASE CONFIG ===
+const firebaseConfig = {
+  apiKey: "AIzaSyASeiNUzLV5RWhX0tm3QADrPe05oDb5ylA",
+  authDomain: "joe-caffe.firebaseapp.com",
+  databaseURL: "https://joe-caffe-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "joe-caffe",
+  storageBucket: "joe-caffe.firebasestorage.app",
+  messagingSenderId: "414539964141",
+  appId: "1:414539964141:web:7ef86c17054346766e76e4",
+  measurementId: "G-VVWXMQQ6E9"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// === TAB SWITCH WITH ANIMATION ===
+window.showTab = (tab) => {
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.getElementById(tab + "Tab").classList.add("active");
+};
+
+// === PESANAN MASUK ===
+let selectedOrderId = null;
+window.showStatusModal = (id)=>{ selectedOrderId = id; document.getElementById("statusModal").style.display="flex"; }
+window.tutupStatusModal = ()=>{ document.getElementById("statusModal").style.display="none"; }
+
+window.simpanStatus = async ()=>{
+  const newStatus = document.getElementById("statusSelect").value;
+  const orderDoc = doc(db, "orders", selectedOrderId);
+  await updateDoc(orderDoc, {status:newStatus});
+  if(newStatus==="selesai"){
+    const snap = await getDoc(orderDoc);
+    const data = snap.data();
+    data.timestamp = new Date().toISOString(); // Simpan waktu selesai
+    await setDoc(doc(db,"orders_history",selectedOrderId), data);
+    await deleteDoc(orderDoc);
+  }
+  tutupStatusModal();
+};
+
+onSnapshot(collection(db,"orders"),(snapshot)=>{
+  const list=document.getElementById("ordersList");
+  if(snapshot.empty){list.innerHTML="Tidak ada pesanan.";return;}
+  let html="";
+  snapshot.forEach(docSnap=>{
+    const o=docSnap.data();
+    const total=o.items?.reduce((a,b)=>a+(b.price*b.qty),0)||0;
+    html+=`
+      <div class="card">
+        <b>Meja ${o.meja}</b> — ${o.status.toUpperCase()}<br>
+        ${o.items.map(i=>`${i.name} x${i.qty}`).join(", ")}<br>
+        <b>Total:</b> Rp${total.toLocaleString()}<br>
+        <button class="action" onclick="showStatusModal('${docSnap.id}')">Ubah Status</button>
+      </div>`;
+  });
+  list.innerHTML=html;
+});
+
+// === MENU ===
+window.tambahMenu = async ()=>{
+  const name=document.getElementById("nama").value;
+  const price=parseInt(document.getElementById("harga").value);
+  const category=document.getElementById("kategori").value;
+  const img=document.getElementById("gambar").value;
+  if(!name||!price||!img)return alert("Lengkapi semua field!");
+  await addDoc(collection(db,"menu"),{name,price,category,img,status:"tersedia"});
+  document.getElementById("nama").value="";
+  document.getElementById("harga").value="";
+  document.getElementById("gambar").value="";
+  alert("Menu berhasil ditambahkan!");
+};
+
+onSnapshot(collection(db,"menu"),(snapshot)=>{
+  const list=document.getElementById("menuList");
+  let html="";
+  snapshot.forEach(docSnap=>{
+    const m=docSnap.data();
+    html+=`
+      <div class="menu-item">
+        <img src="${m.img}" alt="">
+        <div>
+          <strong>${m.name}</strong><br>
+          Rp${m.price.toLocaleString()} — ${m.category}<br>
+          <span style="color:${m.status==='habis'?'red':'green'}">${m.status}</span>
+        </div>
+        <div class="buttons">
+          <button class="edit" onclick="editMenu('${docSnap.id}')">✏️ Edit</button>
+          <button class="delete" onclick="hapusMenu('${docSnap.id}')">🗑️ Hapus</button>
+        </div>
+      </div>`;
+  });
+  list.innerHTML=html||"Belum ada menu.";
+});
+
+window.hapusMenu = async (id)=>{
+  if(confirm("Yakin hapus menu ini?")){
+    await deleteDoc(doc(db,"menu",id));
+    alert("Menu dihapus.");
+  }
+};
+window.editMenu = async (id)=>{
+  const newName = prompt("Nama baru (kosongkan jika tidak ubah):");
+  const newPrice = prompt("Harga baru (kosongkan jika tidak ubah):");
+  const newStatus = confirm("Apakah menu ini tersedia? OK=Ya Cancel=Habis")?"tersedia":"habis";
+  const updates={};
+  if(newName)updates.name=newName;
+  if(newPrice)updates.price=parseInt(newPrice);
+  updates.status=newStatus;
+  await updateDoc(doc(db,"menu",id),updates);
+  alert("Menu diperbarui!");
+};
+
+// === LAPORAN ===
+async function getOrderHistory() {
+  const snap = await getDocs(collection(db, "orders_history"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+window.filterLaporan = async () => {
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  const report = document.getElementById("reportList");
+  const bestSeller = document.getElementById("bestSellerList");
+  const rekap = document.getElementById("rekapList");
+
+  const data = await getOrderHistory();
+  if (!data.length) {
+    report.innerHTML = "Belum ada data penjualan.";
+    bestSeller.innerHTML = "-";
+    rekap.innerHTML = "-";
+    return;
+  }
+
+  let filtered = data;
+  if (start && end) {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    endDate.setHours(23,59,59,999);
+    filtered = data.filter(d => {
+      const t = new Date(d.timestamp || Date.now());
+      return t >= startDate && t <= endDate;
+    });
+  }
+
+  let totalPendapatan = 0;
+  let html = "";
+  filtered.forEach(o => {
+    const total = o.items?.reduce((a,b)=>a+(b.price*b.qty),0)||0;
+    totalPendapatan += total;
+    html += `
+      <div class="card">
+        Meja ${o.meja} — Rp${total.toLocaleString()}<br>
+        ${o.items.map(i=>`${i.name} x${i.qty}`).join(", ")}<br>
+        <small>${new Date(o.timestamp || Date.now()).toLocaleString()}</small>
+      </div>`;
+  });
+  html += `<h3>Total Pendapatan: Rp${totalPendapatan.toLocaleString()}</h3>`;
+  report.innerHTML = html;
+
+  const produkCount = {};
+  filtered.forEach(o => {
+    o.items?.forEach(i => {
+      produkCount[i.name] = (produkCount[i.name] || 0) + i.qty;
+    });
+  });
+  const sorted = Object.entries(produkCount).sort((a,b)=>b[1]-a[1]);
+  bestSeller.innerHTML = sorted.length
+    ? sorted.slice(0,5).map(([n,c])=>`${n} — ${c}x`).join("<br>")
+    : "Belum ada transaksi.";
+
+  const daily = {};
+  const monthly = {};
+  filtered.forEach(o => {
+    const t = new Date(o.timestamp || Date.now());
+    const dKey = t.toISOString().slice(0,10);
+    const mKey = `${t.getFullYear()}-${t.getMonth()+1}`;
+    const total = o.items?.reduce((a,b)=>a+(b.price*b.qty),0)||0;
+    daily[dKey] = (daily[dKey] || 0) + total;
+    monthly[mKey] = (monthly[mKey] || 0) + total;
+  });
+
+  let rekapHtml = "<b>Harian:</b><br>";
+  Object.entries(daily).forEach(([d,v])=>{
+    rekapHtml += `${d}: Rp${v.toLocaleString()}<br>`;
+  });
+  rekapHtml += "<hr><b>Bulanan:</b><br>";
+  Object.entries(monthly).forEach(([m,v])=>{
+    rekapHtml += `${m}: Rp${v.toLocaleString()}<br>`;
+  });
+  rekap.innerHTML = rekapHtml;
+};
+filterLaporan();
+</script>
+</body>
+</html>
